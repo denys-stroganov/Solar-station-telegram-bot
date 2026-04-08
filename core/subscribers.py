@@ -15,7 +15,8 @@ def load_subscribers() -> list[int]:
     if time.time() - _last_loaded > CACHE_TTL:
         try:
             members = r.smembers("subscribers")
-            _subscribers_cache = [int(m) for m in members]
+            # Використовуємо set щоб гарантувати унікальність
+            _subscribers_cache = list({int(m) for m in members})
             _last_loaded = time.time()
             logging.info(f"[Subscribers] Refreshed: {_subscribers_cache}")
         except Exception as e:
@@ -26,7 +27,11 @@ def load_subscribers() -> list[int]:
 def save_subscriber(chat_id: int):
     try:
         r.sadd("subscribers", chat_id)
-        _subscribers_cache.append(chat_id)
-        logging.info(f"[Subscribers] Saved subscriber: {chat_id}")
+        # Додаємо тільки якщо ще немає — уникаємо дублікатів
+        if chat_id not in _subscribers_cache:
+            _subscribers_cache.append(chat_id)
+            logging.info(f"[Subscribers] Saved subscriber: {chat_id}")
+        else:
+            logging.info(f"[Subscribers] Subscriber already exists: {chat_id}")
     except Exception as e:
         logging.error(f"[Subscribers] Failed to save {chat_id}: {e}")

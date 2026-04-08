@@ -34,12 +34,17 @@ async def soc_monitor(bot, dp):
                 await asyncio.sleep(30)
                 continue
 
+            # Зберігаємо тільки потрібні підсекції, НЕ весь data
+            # raw_full_data видалено — це був головний джерело витоку пам'яті
             state_cache.set("raw_runtime", data.get("runtime"))
             state_cache.set("raw_energy", data.get("energy"))
             state_cache.set("raw_batteryInfo", data.get("batteryInfo"))
-            state_cache.set("raw_full_data", data)
 
-            soc = data["batteryInfo"]["soc"]
+            battery_info = data.get("batteryInfo") or {}
+            soc = battery_info.get("soc")
+
+            # Явно звільняємо великий об'єкт
+            del data
 
             if soc is None:
                 await asyncio.sleep(10)
@@ -47,7 +52,6 @@ async def soc_monitor(bot, dp):
 
             if isinstance(soc, str):
                 soc = int(soc.replace("%", ""))
-            # logging.info(f"[SOC Monitor] Current SOC: {soc}% | low_sent: {state['low_sent']} | high_sent: {state['high_sent']}")
 
             # Низький SOC
             if soc <= LOW_THRESHOLD and not state["low_sent"]:

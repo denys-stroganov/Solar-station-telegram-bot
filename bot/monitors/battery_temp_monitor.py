@@ -21,8 +21,10 @@ async def battery_temp_monitor(bot, dp):
                 timeout=10
             )
 
-            temp = data["batteryInfo"]["tBat"]
-            # logging.info(f"[Temp Monitor] Current temp: {temp} type={type(temp)} | low_sent: {state['low_sent']} | high_sent: {state['high_sent']}")
+            # Витягуємо лише потрібне поле і одразу звільняємо data
+            temp = data.get("batteryInfo", {}).get("tBat")
+            del data  # звільняємо великий об'єкт одразу
+
             if temp is None or not isinstance(temp, (int, float)):
                 await asyncio.sleep(30)
                 continue
@@ -36,7 +38,6 @@ async def battery_temp_monitor(bot, dp):
             if temp <= LOW_TEMP and not state["low_sent"]:
                 state["low_sent"] = True
                 state["high_sent"] = False
-
                 for chat_id in subscribers:
                     await bot.send_message(chat_id, f"❄️ Низька температура акумуляторів: {temp}°C")
 
@@ -44,16 +45,20 @@ async def battery_temp_monitor(bot, dp):
             elif temp >= HIGH_TEMP and not state["high_sent"]:
                 state["high_sent"] = True
                 state["low_sent"] = False
-
                 for chat_id in subscribers:
                     await bot.send_message(chat_id, f"🔥 Висока температура акумуляторів: {temp}°C")
+
+            # Скидаємо стан якщо температура повернулась до норми
+            elif LOW_TEMP < temp < HIGH_TEMP:
+                state["low_sent"] = False
+                state["high_sent"] = False
 
         except PermissionError:
             print("[Temp Monitor] Session expired → re-login")
             auth.login()
 
         except asyncio.TimeoutError:
-            print(f"[Temp Monitor] Timeout while fetching data")
+            print("[Temp Monitor] Timeout while fetching data")
 
         except Exception as e:
             print(f"[Temp Monitor] Error: {e}")
