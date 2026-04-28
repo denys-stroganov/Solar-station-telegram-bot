@@ -9,7 +9,7 @@ if __name__ == "__main__":
         auth = AuthSession(URLS["login"])
         auth.login()
 
-        client = DataClient(auth.session)
+        client = DataClient(auth)
         data = client.get_full_data()
 
         analyzer = DataAnalyzer(data)
