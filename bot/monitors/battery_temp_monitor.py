@@ -3,7 +3,7 @@ import logging
 from core.subscribers import load_subscribers
 
 LOW_TEMP = 5
-HIGH_TEMP = 45
+HIGH_TEMP = 50
 
 async def battery_temp_monitor(bot, dp):
     print("🌡 battery_temp_monitor started")
