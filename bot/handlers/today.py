@@ -19,7 +19,12 @@ async def today_handler(message: Message, dispatcher: Dispatcher):
         data = cached
     else:
         loop = asyncio.get_running_loop()
-        data = await loop.run_in_executor(None, client.get_full_data)
+        try:
+            data = await loop.run_in_executor(None, client.get_full_data)
+        except ValueError as e:
+            await message.answer(f"⚠️ {e}")
+            return
+
         cache.set("raw_full_data", data)
 
     analyzed = DataAnalyzer(data)

@@ -52,30 +52,31 @@ class DataClient:
     # API CALLS
     # ----------------------------
     def get_battery_info(self):
-        """ LuxPower batteryInfo endpoint is NOT API.
-        It requires:
-        - serialNum
-        - date (YYYY-MM-DD)
-        - page, rows
-        """
         url = f'{URLS["batteryInfo"]}{self.get_daily_date}'
         params = {"serialNum": SERIALS[1]}
         payload = {"page": 1, "rows": 1}
         resp = self._safe_post(url, payload=payload, params=params, expect_json=True)
 
-        return resp["rows"][0]
+        rows = resp.get("rows", [])
+        if not rows:
+            print(f"[battery] Немає даних за {self.get_daily_date}")
+            return None
+
+        return rows[0]
 
     # ----------------------------
     # API CALLS
     # ----------------------------
     def get_full_data(self):
-        """
-        Returns a unified dict ready for DataAnalyzer.
-        """
         energy = self.get_energy_info()
         runtime = self.get_runtime_info()
         details = self.get_details_info()
         battery = self.get_battery_info()
+
+        if battery is None:
+            raise ValueError("Дані батареї недоступні за сьогодні")
+            # або: return None — якщо хочеш м'яко обробити в хендлері
+
         return {
             "energy": energy,
             "runtime": runtime,
