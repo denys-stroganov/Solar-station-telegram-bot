@@ -24,8 +24,8 @@ async def status_handler(message: Message, dispatcher: Dispatcher):
         "<b>🔄 Refresh (new data)</b>\n\n"
         f"{fmt.today_info()}\n\n"
         f"{fmt.general_info()}\n\n"
-        f"{fmt.runtime_info()}\n\n"
-        f"{fmt.total_info()}"
+        f"{fmt.runtime_info()}"
+        # f"{fmt.total_info()}"
     )
 
     await message.answer(text)
