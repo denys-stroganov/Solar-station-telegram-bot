@@ -22,6 +22,15 @@ class TelegramFormatter:
 
         if "Grid energy" in generation:
             text += f"Grid: <code>{generation['Grid energy']} Wt</code> ({generation['Direction']})\n"
+            
+            r, s, t = generation["Grid R"], generation["Grid S"], generation["Grid T"]
+            r_dir = "Export" if r > 0 else "Import" if r < 0 else "—"
+            s_dir = "Export" if s > 0 else "Import" if s < 0 else "—"
+            t_dir = "Export" if t > 0 else "Import" if t < 0 else "—"
+            
+            text += f"  ├ R: <code>{abs(r)} Wt</code> ({r_dir})\n"
+            text += f"  ├ S: <code>{abs(s)} Wt</code> ({s_dir})\n"
+            text += f"  └ T: <code>{abs(t)} Wt</code> ({t_dir})\n"
 
         text += f"Consumption: <code>{consumption['Consumption']} Wt</code>\n"
         text += f"Battery: <code>{consumption['Battery charging']} Wt</code>"

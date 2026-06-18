@@ -23,6 +23,13 @@ class ConsoleFormatter:
 
         if "Grid energy" in generation:
             lines.append(f"Grid energy: {generation['Grid energy']} Wt {generation['Direction']}")
+            r, s, t = generation["Grid R"], generation["Grid S"], generation["Grid T"]
+            r_dir = "Export" if r > 0 else "Import" if r < 0 else "—"
+            s_dir = "Export" if s > 0 else "Import" if s < 0 else "—"
+            t_dir = "Export" if t > 0 else "Import" if t < 0 else "—"
+            lines.append(f"  ├ R: {abs(r)} Wt ({r_dir})")
+            lines.append(f"  ├ S: {abs(s)} Wt ({s_dir})")
+            lines.append(f"  └ T: {abs(t)} Wt ({t_dir})")
         lines.append(f"Consumption: {consumption['Consumption']} Wt")
         lines.append(f"Battery charging: {consumption['Battery charging']} Wt")
 

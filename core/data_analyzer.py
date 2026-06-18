@@ -16,12 +16,22 @@ class DataAnalyzer:
         energy_generation_data = {}
         if not self.data["runtime"]["isOffGrid"]:
             energy_generation_data["Solar generation"] = self.data["runtime"]["ppv"]
-            energy_generation_data["Grid energy"] = self.data["runtime"]["gridPowerr"] + self.data["runtime"]["gridPowers"] + self.data["runtime"]["gridPowert"]
-            if energy_generation_data["Grid energy"] > 0:
+            
+            grid_r = self.data["runtime"]["gridPowerr"]
+            grid_s = self.data["runtime"]["gridPowers"]
+            grid_t = self.data["runtime"]["gridPowert"]
+            
+            energy_generation_data["Grid R"] = grid_r
+            energy_generation_data["Grid S"] = grid_s
+            energy_generation_data["Grid T"] = grid_t
+            
+            grid_sum = grid_r + grid_s + grid_t
+            energy_generation_data["Grid energy"] = grid_sum
+            if grid_sum > 0:
                 energy_generation_data["Direction"] = "Export"
             else:
                 energy_generation_data["Direction"] = "Import"
-                energy_generation_data["Grid energy"] = abs(energy_generation_data["Grid energy"])
+                energy_generation_data["Grid energy"] = abs(grid_sum)
         else:
             energy_generation_data["Solar generation"] = self.data["runtime"]["ppv"]
         return energy_generation_data
