@@ -40,11 +40,19 @@ class DataAnalyzer:
     def energy_consumption_info(self):
         energy_consumption_data = {}
         if not self.data["runtime"]["isOffGrid"]:
-            energy_consumption_data["Consumption"] = self.data["runtime"]["pLoadr"] + self.data["runtime"]["pLoads"] + self.data["runtime"]["pLoadt"]
-            energy_consumption_data["Battery charging"] = self.data["runtime"]["batPower"]
+            r = self.data["runtime"]["pLoadr"]
+            s = self.data["runtime"]["pLoads"]
+            t = self.data["runtime"]["pLoadt"]
         else:
-            energy_consumption_data["Consumption"] = self.data["runtime"]["pepsr"] + self.data["runtime"]["pepss"] + self.data["runtime"]["pepst"]
-            energy_consumption_data["Battery charging"] = self.data["runtime"]["batPower"]
+            r = self.data["runtime"]["pepsr"]
+            s = self.data["runtime"]["pepss"]
+            t = self.data["runtime"]["pepst"]
+            
+        energy_consumption_data["Consumption R"] = r
+        energy_consumption_data["Consumption S"] = s
+        energy_consumption_data["Consumption T"] = t
+        energy_consumption_data["Consumption"] = r + s + t
+        energy_consumption_data["Battery charging"] = self.data["runtime"]["batPower"]
         return energy_consumption_data
 
     @property

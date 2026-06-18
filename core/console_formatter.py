@@ -31,6 +31,10 @@ class ConsoleFormatter:
             lines.append(f"  ├ S: {abs(s)} Wt ({s_dir})")
             lines.append(f"  └ T: {abs(t)} Wt ({t_dir})")
         lines.append(f"Consumption: {consumption['Consumption']} Wt")
+        c_r, c_s, c_t = consumption["Consumption R"], consumption["Consumption S"], consumption["Consumption T"]
+        lines.append(f"  ├ R: {abs(c_r)} Wt")
+        lines.append(f"  ├ S: {abs(c_s)} Wt")
+        lines.append(f"  └ T: {abs(c_t)} Wt")
         lines.append(f"Battery charging: {consumption['Battery charging']} Wt")
 
         return "\n".join(lines)

@@ -33,6 +33,12 @@ class TelegramFormatter:
             text += f"  └ T: <code>{abs(t)} Wt</code> ({t_dir})\n"
 
         text += f"Consumption: <code>{consumption['Consumption']} Wt</code>\n"
+        
+        c_r, c_s, c_t = consumption["Consumption R"], consumption["Consumption S"], consumption["Consumption T"]
+        text += f"  ├ R: <code>{abs(c_r)} Wt</code>\n"
+        text += f"  ├ S: <code>{abs(c_s)} Wt</code>\n"
+        text += f"  └ T: <code>{abs(c_t)} Wt</code>\n"
+
         text += f"Battery: <code>{consumption['Battery charging']} Wt</code>"
 
         return text
