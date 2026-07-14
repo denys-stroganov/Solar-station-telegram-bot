@@ -64,6 +64,23 @@ class DataClient:
 
         return rows[0]
 
+    def get_month_column_info(self):
+        today = date.today()
+        payload = {
+            "serialNum": SERIALS[1],
+            "year": today.year,
+            "month": today.month
+        }
+        return self._safe_post(URLS["monthColumnParallel"], payload)
+
+    def get_year_column_info(self):
+        today = date.today()
+        payload = {
+            "serialNum": SERIALS[1],
+            "year": today.year
+        }
+        return self._safe_post(URLS["yearColumnParallel"], payload)
+
     # ----------------------------
     # API CALLS
     # ----------------------------

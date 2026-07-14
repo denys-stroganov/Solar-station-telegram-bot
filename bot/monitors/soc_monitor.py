@@ -35,7 +35,7 @@ async def soc_monitor(bot, dp):
                 continue
 
             # Зберігаємо тільки потрібні підсекції, НЕ весь data
-            # raw_full_data видалено — це був головний джерело витоку пам'яті
+            # raw_full_data видалено — це було головне джерело витоку пам'яті
             state_cache.set("raw_runtime", data.get("runtime"))
             state_cache.set("raw_energy", data.get("energy"))
             state_cache.set("raw_batteryInfo", data.get("batteryInfo"))

@@ -126,14 +126,73 @@ async def on_shutdown(app):
         print("❌ on_shutdown ERROR:", e)
 
 
-def main():
+# -----------------------------
+# API HANDLERS FOR MINI APP
+# -----------------------------
+def cors_json_response(data, status=200):
+    return web.json_response(data, status=status, headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+    })
 
+async def handle_options(request: web.Request):
+    return web.Response(headers={
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+    })
+
+async def handle_year_stats(request: web.Request):
+    client = dp["client"]
+    cache = dp["cache"]
+    
+    cached = cache.get("year_column_data")
+    if cached:
+        return cors_json_response(cached)
+        
+    try:
+        data = client.get_year_column_info()
+        cache.set("year_column_data", data, ttl=86400)  # 24 hours
+        return cors_json_response(data)
+    except Exception as e:
+        return cors_json_response({"success": False, "error": str(e)}, status=500)
+
+async def handle_month_stats(request: web.Request):
+    client = dp["client"]
+    cache = dp["cache"]
+    
+    cached = cache.get("month_column_data")
+    if cached:
+        return cors_json_response(cached)
+        
+    try:
+        data = client.get_month_column_info()
+        cache.set("month_column_data", data, ttl=3600)  # 1 hour
+        return cors_json_response(data)
+    except Exception as e:
+        return cors_json_response({"success": False, "error": str(e)}, status=500)
+
+
+def main():
     print(">>> Starting aiohttp server...")
     app = web.Application()
 
     async def health(request):
         return web.Response(text="OK")
     app.router.add_get("/", health)
+
+    # API routes
+    app.router.add_get("/api/stats/year", handle_year_stats)
+    app.router.add_get("/api/stats/month", handle_month_stats)
+    app.router.add_options("/api/stats/year", handle_options)
+    app.router.add_options("/api/stats/month", handle_options)
+
+    # Serve Static TMA Files
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    dist_dir = os.path.join(BASE_DIR, "frontend/dist")
+    os.makedirs(dist_dir, exist_ok=True)
+    app.router.add_static("/app", path=dist_dir, show_index=True)
 
     app.router.add_post(WEBHOOK_PATH, handle)
     app.on_startup.append(on_startup)

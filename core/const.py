@@ -3,4 +3,6 @@ URLS = {"login": "https://server.luxpowertek.com/WManage/web/login",
         "energy": "https://server.luxpowertek.com/WManage/api/inverter/getInverterEnergyInfoParallel",
         "runtime": "https://server.luxpowertek.com/WManage/api/inverter/getInverterRuntimeParallel",
         "details": "https://server.luxpowertek.com/WManage/api/inverterOverview/getParallelGroupDetails",
-        "batteryInfo": "https://server.luxpowertek.com/WManage/web/analyze/data/"}
+        "batteryInfo": "https://server.luxpowertek.com/WManage/web/analyze/data/",
+        "monthColumnParallel": "https://server.luxpowertek.com/WManage/api/inverterChart/monthColumnParallel",
+        "yearColumnParallel": "https://server.luxpowertek.com/WManage/api/inverterChart/yearColumnParallel"}

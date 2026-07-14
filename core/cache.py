@@ -9,15 +9,16 @@ class Cache:
 
     def get(self, key):
         if key in self.storage:
-            value, timestamp = self.storage[key]
-            if key == "last_chat_id" or (time.time() - timestamp < self.ttl):
+            value, timestamp, custom_ttl = self.storage[key]
+            ttl = custom_ttl if custom_ttl is not None else self.ttl
+            if key == "last_chat_id" or (time.time() - timestamp < ttl):
                 return value
             else:
                 # Видаляємо протерміновані записи одразу при зверненні
                 del self.storage[key]
         return None
 
-    def set(self, key, value):
+    def set(self, key, value, ttl=None):
         self._evict_expired()
 
         # Якщо кеш переповнений — видаляємо найстаріший запис
@@ -28,14 +29,17 @@ class Cache:
             )
             del self.storage[oldest_key]
 
-        self.storage[key] = (value, time.time())
+        self.storage[key] = (value, time.time(), ttl)
 
     def _evict_expired(self):
         now = time.time()
-        expired = [
-            k for k, (_, ts) in self.storage.items()
-            if k != "last_chat_id" and now - ts >= self.ttl
-        ]
+        expired = []
+        for k, (_, ts, custom_ttl) in self.storage.items():
+            if k == "last_chat_id":
+                continue
+            ttl = custom_ttl if custom_ttl is not None else self.ttl
+            if now - ts >= ttl:
+                expired.append(k)
         for k in expired:
             del self.storage[k]
 
