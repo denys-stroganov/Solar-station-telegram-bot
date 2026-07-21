@@ -180,7 +180,16 @@ def main():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     dist_dir = os.path.join(BASE_DIR, "frontend/dist")
     os.makedirs(dist_dir, exist_ok=True)
-    app.router.add_static("/app", path=dist_dir, show_index=True)
+
+    # Explicit handler for /app and /app/ → serve index.html
+    index_path = os.path.join(dist_dir, "index.html")
+    async def handle_app_index(request: web.Request):
+        return web.FileResponse(index_path)
+    app.router.add_get("/app", handle_app_index)
+    app.router.add_get("/app/", handle_app_index)
+
+    # Serve assets under /app/
+    app.router.add_static("/app", path=dist_dir, show_index=False)
 
     app.router.add_post(WEBHOOK_PATH, handle)
     app.on_startup.append(on_startup)
