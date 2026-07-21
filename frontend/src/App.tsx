@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Sun, ArrowUpRight, ArrowDownLeft, Zap, Calendar, RefreshCw, BarChart2 } from 'lucide-react';
+import { Sun, ArrowUpRight, ArrowDownLeft, Zap, Calendar, RefreshCw, BarChart2, ChevronLeft, ChevronRight } from 'lucide-react';
+
+declare global {
+  interface Window {
+    Telegram?: any;
+  }
+}
 
 interface StatsItem {
   month?: number;
@@ -10,24 +16,22 @@ interface StatsItem {
   eConsumptionDay: number;
 }
 
-interface YearResponse {
-  success: boolean;
-  data: StatsItem[];
-}
-
-interface MonthResponse {
-  success: boolean;
-  dayMax: number;
-  data: StatsItem[];
-}
-
 const UA_MONTHS = [
   'Січ', 'Лют', 'Бер', 'Кві', 'Тра', 'Чер',
   'Лип', 'Сер', 'Вер', 'Жов', 'Лис', 'Гру'
 ];
 
+const UA_MONTHS_FULL = [
+  'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
+  'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
+];
+
 export default function App() {
-  const [view, setView] = useState<'month' | 'year'>('year');
+  const now = new Date();
+  const [view, setView] = useState<'month' | 'year'>('month');
+  const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth() + 1); // 1..12
+
   const [yearData, setYearData] = useState<StatsItem[]>([]);
   const [monthData, setMonthData] = useState<StatsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,23 +51,30 @@ export default function App() {
     return path;
   };
 
-  const fetchData = async () => {
+  const clearSelection = () => {
+    setSelectedSolar(null);
+    setSelectedExport(null);
+    setSelectedImport(null);
+    setSelectedConsumption(null);
+  };
+
+  const fetchData = async (year: number, month: number) => {
     setLoading(true);
     setError(null);
     try {
       const [yearRes, monthRes] = await Promise.all([
-        fetch(getApiUrl('/api/stats/year')).then(r => r.json()),
-        fetch(getApiUrl('/api/stats/month')).then(r => r.json())
+        fetch(getApiUrl(`/api/stats/year?year=${year}`)).then(r => r.json()),
+        fetch(getApiUrl(`/api/stats/month?year=${year}&month=${month}`)).then(r => r.json())
       ]);
 
       if (yearRes.success) {
-        setYearData(yearRes.data);
+        setYearData(yearRes.data || []);
       } else {
         throw new Error(yearRes.error || 'Failed to fetch year stats');
       }
 
       if (monthRes.success) {
-        setMonthData(monthRes.data);
+        setMonthData(monthRes.data || []);
       } else {
         throw new Error(monthRes.error || 'Failed to fetch month stats');
       }
@@ -76,13 +87,15 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(selectedYear, selectedMonth);
+  }, [selectedYear, selectedMonth]);
+
+  useEffect(() => {
     // Initialize Telegram WebApp SDK if available
     if (window.Telegram?.WebApp) {
       const tg = window.Telegram.WebApp;
       tg.ready();
       tg.expand();
-      // Set header color
       tg.setHeaderColor('#090b11');
       tg.setBackgroundColor('#090b11');
     }
@@ -90,7 +103,40 @@ export default function App() {
 
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchData();
+    fetchData(selectedYear, selectedMonth);
+  };
+
+  const isCurrentMonth = selectedYear === now.getFullYear() && selectedMonth === (now.getMonth() + 1);
+  const isCurrentYear = selectedYear >= now.getFullYear();
+
+  const handlePrev = () => {
+    clearSelection();
+    if (view === 'month') {
+      if (selectedMonth === 1) {
+        setSelectedMonth(12);
+        setSelectedYear(prev => prev - 1);
+      } else {
+        setSelectedMonth(prev => prev - 1);
+      }
+    } else {
+      setSelectedYear(prev => prev - 1);
+    }
+  };
+
+  const handleNext = () => {
+    clearSelection();
+    if (view === 'month') {
+      if (isCurrentMonth) return;
+      if (selectedMonth === 12) {
+        setSelectedMonth(1);
+        setSelectedYear(prev => prev + 1);
+      } else {
+        setSelectedMonth(prev => prev + 1);
+      }
+    } else {
+      if (isCurrentYear) return;
+      setSelectedYear(prev => prev + 1);
+    }
   };
 
   const currentData = view === 'year' ? yearData : monthData;
@@ -111,14 +157,6 @@ export default function App() {
 
   const totals = getTotals();
 
-  // Helper to format values
-  const formatVal = (val: number) => {
-    if (val >= 1000) {
-      return `${(val / 1000).toFixed(2)} МВт·год`;
-    }
-    return `${val.toLocaleString()} кВт·год`;
-  };
-
   if (loading && !refreshing) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#090b11] text-gray-400">
@@ -134,7 +172,7 @@ export default function App() {
         <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 max-w-md">
           <p className="text-red-400 font-medium mb-4">⚠️ Помилка: {error}</p>
           <button
-            onClick={fetchData}
+            onClick={() => fetchData(selectedYear, selectedMonth)}
             className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all"
           >
             Спробувати знову
@@ -165,9 +203,9 @@ export default function App() {
       </div>
 
       {/* View Switcher */}
-      <div className="flex p-1 bg-[#121824] rounded-xl mb-6 border border-white/5">
+      <div className="flex p-1 bg-[#121824] rounded-xl mb-4 border border-white/5">
         <button
-          onClick={() => setView('month')}
+          onClick={() => { setView('month'); clearSelection(); }}
           className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
             view === 'month' ? 'bg-[#1e293b] text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'
           }`}
@@ -176,13 +214,39 @@ export default function App() {
           Місяць
         </button>
         <button
-          onClick={() => setView('year')}
+          onClick={() => { setView('year'); clearSelection(); }}
           className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
             view === 'year' ? 'bg-[#1e293b] text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'
           }`}
         >
           <Zap className="w-4 h-4" />
           Рік
+        </button>
+      </div>
+
+      {/* Date Navigation Bar */}
+      <div className="flex items-center justify-between bg-[#121824] p-3 rounded-xl mb-6 border border-white/5">
+        <button
+          onClick={handlePrev}
+          className="p-2 rounded-lg bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 transition-all active:scale-95"
+          title="Попередній період"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <span className="text-base font-bold text-white tracking-wide">
+          {view === 'month' ? `${UA_MONTHS_FULL[selectedMonth - 1]} ${selectedYear}` : `${selectedYear} рік`}
+        </span>
+        <button
+          onClick={handleNext}
+          disabled={view === 'month' ? isCurrentMonth : isCurrentYear}
+          className={`p-2 rounded-lg transition-all active:scale-95 ${
+            (view === 'month' ? isCurrentMonth : isCurrentYear)
+              ? 'opacity-30 cursor-not-allowed text-gray-600'
+              : 'bg-white/5 text-gray-300 hover:text-white hover:bg-white/10'
+          }`}
+          title="Наступний період"
+        >
+          <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
@@ -199,6 +263,7 @@ export default function App() {
           data={currentData}
           dataKey="ePvDay"
           view={view}
+          selectedMonth={selectedMonth}
           selectedState={selectedSolar}
           setSelectedState={setSelectedSolar}
         />
@@ -213,6 +278,7 @@ export default function App() {
           data={currentData}
           dataKey="eConsumptionDay"
           view={view}
+          selectedMonth={selectedMonth}
           selectedState={selectedConsumption}
           setSelectedState={setSelectedConsumption}
         />
@@ -227,6 +293,7 @@ export default function App() {
           data={currentData}
           dataKey="eExportDay"
           view={view}
+          selectedMonth={selectedMonth}
           selectedState={selectedExport}
           setSelectedState={setSelectedExport}
         />
@@ -241,6 +308,7 @@ export default function App() {
           data={currentData}
           dataKey="eImportDay"
           view={view}
+          selectedMonth={selectedMonth}
           selectedState={selectedImport}
           setSelectedState={setSelectedImport}
         />
@@ -259,6 +327,7 @@ interface WidgetCardProps {
   data: StatsItem[];
   dataKey: keyof StatsItem;
   view: 'month' | 'year';
+  selectedMonth: number;
   selectedState: { index: number; value: number } | null;
   setSelectedState: React.Dispatch<React.SetStateAction<{ index: number; value: number } | null>>;
 }
@@ -272,18 +341,11 @@ function WidgetCard({
   data,
   dataKey,
   view,
+  selectedMonth,
   selectedState,
   setSelectedState
 }: WidgetCardProps) {
   const maxVal = Math.max(...data.map(d => Number(d[dataKey] || 0)), 1);
-
-  // Formatter for individual points
-  const formatPointLabel = (item: StatsItem, idx: number) => {
-    if (view === 'year') {
-      return UA_MONTHS[idx];
-    }
-    return `${item.day} ${UA_MONTHS[new Date().getMonth()] || ''}`;
-  };
 
   const totalLabel = () => {
     if (total >= 1000) {
@@ -316,7 +378,7 @@ function WidgetCard({
             <span className="text-gray-400 font-medium">
               {view === 'year' 
                 ? `${UA_MONTHS[selectedState.index]} статистика:` 
-                : `${selectedState.index + 1}-й день місяця:`}
+                : `${selectedState.index + 1} ${UA_MONTHS[selectedMonth - 1]}:`}
             </span>
             <span className="text-white font-semibold bg-white/5 px-2 py-0.5 rounded-md">
               {selectedState.value.toLocaleString()} кВт·год

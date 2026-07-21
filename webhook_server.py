@@ -7,6 +7,7 @@ from aiogram.dispatcher.middlewares.base import BaseMiddleware
 import logging
 import os
 import asyncio
+from datetime import date
 from core.auth_session import AuthSession
 from core.data_client import DataClient
 from core.cache import Cache
@@ -144,31 +145,18 @@ async def handle_options(request: web.Request):
     })
 
 async def handle_year_stats(request: web.Request):
-    client = dp["client"]
-    cache = dp["cache"]
-    
-    cached = cache.get("year_column_data")
-    if cached:
-        return cors_json_response(cached)
-        
     try:
-        data = client.get_year_column_info()
-        cache.set("year_column_data", data, ttl=86400)  # 24 hours
+        year_param = request.query.get("year")
+        data = dp["cache"].get_or_fetch_year_stats(dp["client"], year_param=year_param)
         return cors_json_response(data)
     except Exception as e:
         return cors_json_response({"success": False, "error": str(e)}, status=500)
 
 async def handle_month_stats(request: web.Request):
-    client = dp["client"]
-    cache = dp["cache"]
-    
-    cached = cache.get("month_column_data")
-    if cached:
-        return cors_json_response(cached)
-        
     try:
-        data = client.get_month_column_info()
-        cache.set("month_column_data", data, ttl=3600)  # 1 hour
+        year_param = request.query.get("year")
+        month_param = request.query.get("month")
+        data = dp["cache"].get_or_fetch_month_stats(dp["client"], year_param=year_param, month_param=month_param)
         return cors_json_response(data)
     except Exception as e:
         return cors_json_response({"success": False, "error": str(e)}, status=500)

@@ -1,15 +1,16 @@
-# flyctl launch added from .gitignore
+# Python
 **/.venv
 **/__pycache__
 **/*.pyc
 **/.env
+.venv/
 
-# flyctl launch added from .idea/.gitignore
-# Default ignored files
-.idea/shelf
-.idea/workspace.xml
+# Node / Frontend
+**/node_modules
+frontend/node_modules
 
-# flyctl launch added from .venv/.gitignore
-.venv/**/.env
-# created by virtualenv automatically
-.venv/**/*
+# IDE & Git
+.git/
+.gitignore
+.idea/
+.DS_Store

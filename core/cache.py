@@ -1,6 +1,7 @@
 import time
+from datetime import date
 
-MAX_CACHE_SIZE = 20  # максимальна кількість записів у кеші
+MAX_CACHE_SIZE = 100  # максимальна кількість записів у кеші
 
 class Cache:
     def __init__(self, ttl):
@@ -51,3 +52,47 @@ class Cache:
 
     def size(self):
         return len(self.storage)
+
+    # ----------------------------------------------------
+    # ХЕЛПЕРИ КЕШУВАННЯ СТАТИСТИКИ З РОЗДІЛЕНИМ TTL
+    # ----------------------------------------------------
+    def get_or_fetch_year_stats(self, client, year_param=None):
+        today_year = date.today().year
+
+        if year_param:
+            req_year = int(year_param)
+            cache_key = f"year_column_data_{req_year}"
+            is_past = req_year < today_year
+        else:
+            cache_key = "year_column_data"
+            is_past = False
+
+        cached = self.get(cache_key)
+        if cached:
+            return cached
+
+        data = client.get_year_column_info(year=year_param)
+        ttl = 2592000 if is_past else 86400  # 30 днів для минулих років, 24г для поточного
+        self.set(cache_key, data, ttl=ttl)
+        return data
+
+    def get_or_fetch_month_stats(self, client, year_param=None, month_param=None):
+        today = date.today()
+
+        if year_param and month_param:
+            req_year = int(year_param)
+            req_month = int(month_param)
+            cache_key = f"month_column_data_{req_year}_{req_month}"
+            is_past = (req_year < today.year) or (req_year == today.year and req_month < today.month)
+        else:
+            cache_key = "month_column_data"
+            is_past = False
+
+        cached = self.get(cache_key)
+        if cached:
+            return cached
+
+        data = client.get_month_column_info(year=year_param, month=month_param)
+        ttl = 2592000 if is_past else 3600  # 30 днів для минулих місяців, 1г для поточного
+        self.set(cache_key, data, ttl=ttl)
+        return data

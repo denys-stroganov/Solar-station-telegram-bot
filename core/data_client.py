@@ -64,20 +64,20 @@ class DataClient:
 
         return rows[0]
 
-    def get_month_column_info(self):
+    def get_month_column_info(self, year=None, month=None):
         today = date.today()
         payload = {
             "serialNum": SERIALS[1],
-            "year": today.year,
-            "month": today.month
+            "year": int(year) if year is not None else today.year,
+            "month": int(month) if month is not None else today.month
         }
         return self._safe_post(URLS["monthColumnParallel"], payload)
 
-    def get_year_column_info(self):
+    def get_year_column_info(self, year=None):
         today = date.today()
         payload = {
             "serialNum": SERIALS[1],
-            "year": today.year
+            "year": int(year) if year is not None else today.year
         }
         return self._safe_post(URLS["yearColumnParallel"], payload)
 
