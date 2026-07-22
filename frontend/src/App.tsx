@@ -274,21 +274,6 @@ export default function App() {
           setSelectedState={setSelectedSolar}
         />
 
-        {/* CONSUMPTION WIDGET */}
-        <WidgetCard
-          title="Власне споживання"
-          total={totals.consumption}
-          icon={<Zap className="w-5 h-5 text-red-500" />}
-          glowClass="bar-glow-consumption"
-          colorGradient="from-red-500 to-orange-400"
-          data={currentData}
-          dataKey="eConsumptionDay"
-          view={view}
-          selectedMonth={selectedMonth}
-          selectedState={selectedConsumption}
-          setSelectedState={setSelectedConsumption}
-        />
-
         {/* EXPORT WIDGET */}
         <WidgetCard
           title="Експорт в мережу"
@@ -317,6 +302,21 @@ export default function App() {
           selectedMonth={selectedMonth}
           selectedState={selectedImport}
           setSelectedState={setSelectedImport}
+        />
+
+        {/* CONSUMPTION WIDGET */}
+        <WidgetCard
+          title="Власне споживання"
+          total={totals.consumption}
+          icon={<Zap className="w-5 h-5 text-red-500" />}
+          glowClass="bar-glow-consumption"
+          colorGradient="from-red-500 to-orange-400"
+          data={currentData}
+          dataKey="eConsumptionDay"
+          view={view}
+          selectedMonth={selectedMonth}
+          selectedState={selectedConsumption}
+          setSelectedState={setSelectedConsumption}
         />
 
       </div>
