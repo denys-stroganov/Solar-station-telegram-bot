@@ -7,7 +7,6 @@ declare global {
   }
 }
 
-
 interface StatsItem {
   month?: number;
   day?: number;
