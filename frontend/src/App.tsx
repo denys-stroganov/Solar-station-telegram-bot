@@ -26,6 +26,11 @@ const UA_MONTHS_FULL = [
   'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
 ];
 
+// Форматує число за українськими правилами:
+// кома як десятковий роздільник, пробіл між розрядами тисяч
+const formatNumber = (value: number, maximumFractionDigits = 0) =>
+  value.toLocaleString('uk-UA', { maximumFractionDigits, minimumFractionDigits: 0 });
+
 export default function App() {
   const now = new Date();
   const [view, setView] = useState<'month' | 'year'>('month');
@@ -253,7 +258,7 @@ export default function App() {
 
       {/* Widgets List */}
       <div className="space-y-6">
-        
+
         {/* SOLAR WIDGET */}
         <WidgetCard
           title="Сонячна генерація"
@@ -350,9 +355,9 @@ function WidgetCard({
 
   const totalLabel = () => {
     if (total >= 1000) {
-      return `${(total / 1000).toFixed(2)} МВт·год`;
+      return `${formatNumber(total / 1000, 2)} МВт·год`;
     }
-    return `${total.toLocaleString()} кВт·год`;
+    return `${formatNumber(total)} кВт·год`;
   };
 
   return (
@@ -377,12 +382,12 @@ function WidgetCard({
         {selectedState ? (
           <>
             <span className="text-gray-400 font-medium">
-              {view === 'year' 
-                ? `${UA_MONTHS[selectedState.index]} статистика:` 
+              {view === 'year'
+                ? `${UA_MONTHS[selectedState.index]} статистика:`
                 : `${selectedState.index + 1} ${UA_MONTHS[selectedMonth - 1]}:`}
             </span>
             <span className="text-white font-semibold bg-white/5 px-2 py-0.5 rounded-md">
-              {selectedState.value.toLocaleString()} кВт·год
+              {formatNumber(selectedState.value)} кВт·год
             </span>
           </>
         ) : (
