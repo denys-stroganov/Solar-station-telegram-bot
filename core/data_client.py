@@ -64,6 +64,28 @@ class DataClient:
 
         return rows[0]
 
+    # ----------------------------
+    # NORMALIZATION
+    # ----------------------------
+
+    # Поля, які приходять з бекенду постачальника помноженими на 10
+    SCALED_FIELDS = ("ePvDay", "eExportDay", "eImportDay", "eConsumptionDay")
+
+    @staticmethod
+    def _normalize_row(row: dict, fields=SCALED_FIELDS, divisor: int = 10) -> dict:
+        """Ділить вказані поля на divisor, зберігаючи структуру рядка."""
+        for field in fields:
+            if field in row and row[field] is not None:
+                row[field] = round(row[field] / divisor, 1)
+        return row
+
+    @classmethod
+    def _normalize_rows(cls, rows: list[dict]) -> list[dict]:
+        return [cls._normalize_row(row) for row in rows]
+
+    # ----------------------------
+    # API CALLS
+    # ----------------------------
     def get_month_column_info(self, year=None, month=None):
         today = date.today()
         payload = {
@@ -71,7 +93,12 @@ class DataClient:
             "year": int(year) if year is not None else today.year,
             "month": int(month) if month is not None else today.month
         }
-        return self._safe_post(URLS["monthColumnParallel"], payload)
+        resp = self._safe_post(URLS["monthColumnParallel"], payload)
+
+        if resp and resp.get("success") and isinstance(resp.get("data"), list):
+            resp["data"] = self._normalize_rows(resp["data"])
+
+        return resp
 
     def get_year_column_info(self, year=None):
         today = date.today()
@@ -79,7 +106,12 @@ class DataClient:
             "serialNum": SERIALS[1],
             "year": int(year) if year is not None else today.year
         }
-        return self._safe_post(URLS["yearColumnParallel"], payload)
+        resp = self._safe_post(URLS["yearColumnParallel"], payload)
+
+        if resp and resp.get("success") and isinstance(resp.get("data"), list):
+            resp["data"] = self._normalize_rows(resp["data"])
+
+        return resp
 
     # ----------------------------
     # API CALLS
