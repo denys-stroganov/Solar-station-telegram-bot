@@ -96,6 +96,7 @@ export default function App() {
       const tg = window.Telegram.WebApp;
       tg.ready();
       tg.expand();
+      tg.disableVerticalSwipes(); // забороняє закриття/згортання свайпом
       tg.setHeaderColor('#090b11');
       tg.setBackgroundColor('#090b11');
     }
