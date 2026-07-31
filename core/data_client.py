@@ -83,6 +83,7 @@ class DataClient:
     def _normalize_rows(cls, rows: list[dict]) -> list[dict]:
         return [cls._normalize_row(row) for row in rows]
 
+
     # ----------------------------
     # API CALLS
     # ----------------------------
