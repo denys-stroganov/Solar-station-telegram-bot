@@ -96,3 +96,18 @@ class Cache:
         ttl = 2592000 if is_past else 3600  # 30 днів для минулих місяців, 1г для поточного
         self.set(cache_key, data, ttl=ttl)
         return data
+
+    def get_or_fetch_day_multiline(self, client, date_text: str):
+        cache_key = f"day_multiline_{date_text}"
+        
+        cached = self.get(cache_key)
+        if cached:
+            return cached
+            
+        data = client.get_day_multiline_info(date_text)
+        
+        today_str = date.today().strftime("%Y-%m-%d")
+        is_past = date_text < today_str
+        ttl = 2592000 if is_past else 600  # 30 days for past, 10 minutes for current day
+        self.set(cache_key, data, ttl=ttl)
+        return data

@@ -10,7 +10,11 @@ def reply_menu_keyboard():
         keyboard.append([
             KeyboardButton(
                 text="📊 Statistics",
-                web_app=WebAppInfo(url=f"{web_app_url}/app/")
+                web_app=WebAppInfo(url=f"{web_app_url}/app/?tab=statistics")
+            ),
+            KeyboardButton(
+                text="📈 Charts",
+                web_app=WebAppInfo(url=f"{web_app_url}/app/?tab=charts")
             )
         ])
     

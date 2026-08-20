@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import ChartsView from './ChartsView';
 import { Sun, ArrowUpRight, ArrowDownLeft, Zap, Calendar, RefreshCw, BarChart2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 declare global {
@@ -32,6 +33,13 @@ const formatNumber = (value: number, maximumFractionDigits = 0) =>
   value.toLocaleString('uk-UA', { maximumFractionDigits, minimumFractionDigits: 0 });
 
 export default function App() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const tab = urlParams.get('tab');
+
+  if (tab === 'charts') {
+    return <ChartsView />;
+  }
+
   const now = new Date();
   const [view, setView] = useState<'month' | 'year'>('month');
   const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());

@@ -161,6 +161,16 @@ async def handle_month_stats(request: web.Request):
     except Exception as e:
         return cors_json_response({"success": False, "error": str(e)}, status=500)
 
+async def handle_day_chart(request: web.Request):
+    try:
+        date_param = request.query.get("date")
+        if not date_param:
+            date_param = date.today().strftime("%Y-%m-%d")
+        data = dp["cache"].get_or_fetch_day_multiline(dp["client"], date_text=date_param)
+        return cors_json_response(data)
+    except Exception as e:
+        return cors_json_response({"success": False, "error": str(e)}, status=500)
+
 
 def main():
     print(">>> Starting aiohttp server...")
@@ -173,8 +183,10 @@ def main():
     # API routes
     app.router.add_get("/api/stats/year", handle_year_stats)
     app.router.add_get("/api/stats/month", handle_month_stats)
+    app.router.add_get("/api/stats/chart", handle_day_chart)
     app.router.add_options("/api/stats/year", handle_options)
     app.router.add_options("/api/stats/month", handle_options)
+    app.router.add_options("/api/stats/chart", handle_options)
 
     # Serve Static TMA Files
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))

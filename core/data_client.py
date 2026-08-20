@@ -114,6 +114,13 @@ class DataClient:
 
         return resp
 
+    def get_day_multiline_info(self, date_text: str):
+        payload = {
+            "serialNum": SERIALS[1],
+            "dateText": date_text
+        }
+        return self._safe_post(URLS["dayMultiLineParallel"], payload)
+
     # ----------------------------
     # API CALLS
     # ----------------------------
