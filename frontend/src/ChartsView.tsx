@@ -251,50 +251,6 @@ export default function ChartsView() {
             </div>
           </div>
 
-          {/* Consumption Chart */}
-          <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <h3 className="text-rose-400 font-semibold mb-4 text-sm">Споживання (kW)</h3>
-            <div className="h-48 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorCons" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#fb7185" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#fb7185" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                  <XAxis dataKey="timeFormatted" stroke="#ffffff50" fontSize={12} tickMargin={10} minTickGap={30} ticks={tickValues} />
-                  <YAxis stroke="#ffffff50" fontSize={12} tickFormatter={(val) => val.toFixed(1)} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="consumptionKw" name="Consumption" stroke="#fb7185" strokeWidth={2} fillOpacity={1} fill="url(#colorCons)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Battery Chart */}
-          <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <h3 className="text-emerald-400 font-semibold mb-4 text-sm">Розряд акумулятора (kW)</h3>
-            <div className="h-48 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorBat" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#34d399" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                  <XAxis dataKey="timeFormatted" stroke="#ffffff50" fontSize={12} tickMargin={10} minTickGap={30} ticks={tickValues} />
-                  <YAxis stroke="#ffffff50" fontSize={12} tickFormatter={(val) => val.toFixed(1)} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="batteryKw" name="Battery" stroke="#34d399" strokeWidth={2} fillOpacity={1} fill="url(#colorBat)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
           {/* Grid Chart */}
           <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
             <h3 className="text-sky-400 font-semibold mb-4 text-sm">Енергія з/в мережу (kW)</h3>
@@ -317,9 +273,31 @@ export default function ChartsView() {
             </div>
           </div>
 
+          {/* Consumption Chart */}
+          <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
+            <h3 className="text-rose-400 font-semibold mb-4 text-sm">Споживання (kW)</h3>
+            <div className="h-48 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorCons" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#fb7185" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#fb7185" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                  <XAxis dataKey="timeFormatted" stroke="#ffffff50" fontSize={12} tickMargin={10} minTickGap={30} ticks={tickValues} />
+                  <YAxis stroke="#ffffff50" fontSize={12} tickFormatter={(val) => val.toFixed(1)} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="consumptionKw" name="Consumption" stroke="#fb7185" strokeWidth={2} fillOpacity={1} fill="url(#colorCons)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
           {/* SOC Chart */}
           <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <h3 className="text-purple-400 font-semibold mb-4 text-sm">Заряд Акумуляторів (%)</h3>
+            <h3 className="text-purple-400 font-semibold mb-4 text-sm">Рівень Заряду Акумуляторів (%)</h3>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
@@ -334,6 +312,28 @@ export default function ChartsView() {
                   <YAxis stroke="#ffffff50" fontSize={12} domain={[0, 100]} />
                   <Tooltip content={<CustomTooltip />} />
                   <Area type="monotone" dataKey="soc" name="SOC" stroke="#c084fc" strokeWidth={2} fillOpacity={1} fill="url(#colorSoc)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Battery Chart */}
+          <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
+            <h3 className="text-emerald-400 font-semibold mb-4 text-sm">Заряд/Розряд Акумуляторів (kW)</h3>
+            <div className="h-48 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorBat" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#34d399" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                  <XAxis dataKey="timeFormatted" stroke="#ffffff50" fontSize={12} tickMargin={10} minTickGap={30} ticks={tickValues} />
+                  <YAxis stroke="#ffffff50" fontSize={12} tickFormatter={(val) => val.toFixed(1)} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="batteryKw" name="Battery" stroke="#34d399" strokeWidth={2} fillOpacity={1} fill="url(#colorBat)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
