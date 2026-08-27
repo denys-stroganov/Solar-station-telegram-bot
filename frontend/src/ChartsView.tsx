@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart2, Calendar, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BarChart2, Calendar, RefreshCw, ChevronLeft, ChevronRight, Sun, ArrowRightLeft, Zap, Battery, Activity } from 'lucide-react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import DatePicker from './DatePicker';
 
@@ -28,6 +28,7 @@ export default function ChartsView() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [data, setData] = useState<ChartDataItem[]>([]);
+  const [dailyTotals, setDailyTotals] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -47,19 +48,45 @@ export default function ChartsView() {
   };
 
   const fetchData = async (date: Date) => {
-    setLoading(true);
-    setError(null);
     try {
+      setLoading(true);
+      setError(null);
+      // Format as 'YYYY-MM-DD'
       const dateStr = formatDateParam(date);
-      const res = await fetch(getApiUrl(`/api/stats/chart?date=${dateStr}`)).then(r => r.json());
+      const [yearStr, monthStr, dayStr] = dateStr.split('-');
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10);
+      const day = parseInt(dayStr, 10);
 
-      if (res.success) {
-        setData(res.data || []);
+      const [chartRes, monthRes] = await Promise.all([
+        fetch(getApiUrl(`/api/stats/chart?date=${dateStr}`)).then(r => r.json()),
+        fetch(getApiUrl(`/api/stats/month?year=${year}&month=${month}`)).then(r => r.json())
+      ]);
+
+      if (chartRes.success) {
+        setData(chartRes.data || []);
       } else {
-        throw new Error(res.error || 'Failed to fetch chart data');
+        throw new Error(chartRes.error || 'Failed to fetch chart data');
       }
-    } catch (err: any) {
-      setError(err.message || 'Помилка підключення до сервера');
+
+      if (monthRes.success && Array.isArray(monthRes.data)) {
+        const dayData = monthRes.data.find((item: any) => String(item.day) === String(day));
+        if (dayData) {
+          setDailyTotals({
+            solar: dayData.ePvDay ?? 0,
+            export: dayData.eExportDay ?? 0,
+            import: dayData.eImportDay ?? 0,
+            consumption: dayData.eConsumptionDay ?? 0
+          });
+        } else {
+          setDailyTotals(null);
+        }
+      } else {
+        setDailyTotals(null);
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : 'Error loading data');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -133,47 +160,36 @@ export default function ChartsView() {
     }
   });
 
-  const calculateTotals = () => {
+  const getDisplayTotals = () => {
     let solarSum = 0;
     let gridImportSum = 0;
     let gridExportSum = 0;
     let consSum = 0;
-    let batChargeSum = 0;
-    let batDischargeSum = 0;
     
+    // Fallback calculation just in case daily_totals is missing
     chartData.forEach(item => {
       solarSum += item.solarPvKw / 12;
       consSum += item.consumptionKw / 12;
       
-      // Assuming positive gridPower is Import (taking from grid), negative is Export
       if (item.gridPowerKw > 0) {
         gridImportSum += item.gridPowerKw / 12;
       } else {
         gridExportSum += Math.abs(item.gridPowerKw) / 12;
-      }
-      
-      // Assuming positive battery is Discharge (giving power), negative is Charge
-      if (item.batteryKw > 0) {
-        batDischargeSum += item.batteryKw / 12;
-      } else {
-        batChargeSum += Math.abs(item.batteryKw) / 12;
       }
     });
 
     const latestSoc = chartData.length > 0 ? chartData[chartData.length - 1].soc : 0;
 
     return {
-      solar: solarSum.toFixed(1),
-      cons: consSum.toFixed(1),
-      gridImport: gridImportSum.toFixed(1),
-      gridExport: gridExportSum.toFixed(1),
-      batCharge: batChargeSum.toFixed(1),
-      batDischarge: batDischargeSum.toFixed(1),
+      solar: dailyTotals?.solar !== undefined ? dailyTotals.solar : solarSum.toFixed(1),
+      cons: dailyTotals?.consumption !== undefined ? dailyTotals.consumption : consSum.toFixed(1),
+      gridImport: dailyTotals?.import !== undefined ? dailyTotals.import : gridImportSum.toFixed(1),
+      gridExport: dailyTotals?.export !== undefined ? dailyTotals.export : gridExportSum.toFixed(1),
       soc: latestSoc.toFixed(1)
     };
   };
 
-  const totals = calculateTotals();
+  const totals = getDisplayTotals();
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -287,10 +303,18 @@ export default function ChartsView() {
 
           {/* Solar PV Chart */}
           <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-yellow-400 font-semibold text-sm">Генерація (kW)</h3>
-              <div className="text-xs font-medium text-white/80 bg-white/5 px-2 py-1 rounded-md">
-                Сума: {totals.solar} кВт·год
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white/5 rounded-xl border border-white/5">
+                  <Sun className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-300">Сонячна генерація</h3>
+                  <p className="text-xs text-gray-500">Сума за день</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-white tracking-tight">{totals.solar} кВт·год</div>
               </div>
             </div>
             <div className="h-48 w-full">
@@ -314,10 +338,23 @@ export default function ChartsView() {
 
           {/* Grid Chart */}
           <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sky-400 font-semibold text-sm">Енергія з/в мережу (kW)</h3>
-              <div className="text-xs font-medium text-white/80 bg-white/5 px-2 py-1 rounded-md">
-                Імпорт: {totals.gridImport} / Експорт: {totals.gridExport} кВт·год
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white/5 rounded-xl border border-white/5">
+                  <ArrowRightLeft className="w-5 h-5 text-sky-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-300">Енергія з/в мережу</h3>
+                  <p className="text-xs text-gray-500">Сума за день</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-white tracking-tight">
+                  <span className="text-sm text-gray-400 font-normal mr-1">Імпорт</span>{totals.gridImport}
+                  <span className="text-gray-600 mx-2">/</span>
+                  <span className="text-sm text-gray-400 font-normal mr-1">Експорт</span>{totals.gridExport}
+                  <span className="text-sm font-normal text-gray-400 ml-1">кВт·год</span>
+                </div>
               </div>
             </div>
             <div className="h-48 w-full">
@@ -341,10 +378,18 @@ export default function ChartsView() {
 
           {/* Consumption Chart */}
           <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-rose-400 font-semibold text-sm">Споживання (kW)</h3>
-              <div className="text-xs font-medium text-white/80 bg-white/5 px-2 py-1 rounded-md">
-                Сума: {totals.cons} кВт·год
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white/5 rounded-xl border border-white/5">
+                  <Zap className="w-5 h-5 text-rose-500" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-300">Споживання</h3>
+                  <p className="text-xs text-gray-500">Сума за день</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-white tracking-tight">{totals.cons} кВт·год</div>
               </div>
             </div>
             <div className="h-48 w-full">
@@ -368,10 +413,18 @@ export default function ChartsView() {
 
           {/* SOC Chart */}
           <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-purple-400 font-semibold text-sm">Рівень Заряду Акумуляторів (%)</h3>
-              <div className="text-xs font-medium text-white/80 bg-white/5 px-2 py-1 rounded-md">
-                Останній: {totals.soc}%
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white/5 rounded-xl border border-white/5">
+                  <Battery className="w-5 h-5 text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-300">Рівень Заряду Акумуляторів</h3>
+                  <p className="text-xs text-gray-500">Останнє значення</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-white tracking-tight">{totals.soc}%</div>
               </div>
             </div>
             <div className="h-48 w-full">
@@ -395,10 +448,15 @@ export default function ChartsView() {
 
           {/* Battery Chart */}
           <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-emerald-400 font-semibold text-sm">Заряд/Розряд Акумуляторів (kW)</h3>
-              <div className="text-xs font-medium text-white/80 bg-white/5 px-2 py-1 rounded-md">
-                Заряд: {totals.batCharge} / Розряд: {totals.batDischarge} кВт·год
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white/5 rounded-xl border border-white/5">
+                  <Activity className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-300">Заряд/Розряд Акумуляторів</h3>
+                  <p className="text-xs text-gray-500">Потужність (kW)</p>
+                </div>
               </div>
             </div>
             <div className="h-48 w-full">
