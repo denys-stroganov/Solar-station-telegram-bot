@@ -205,11 +205,22 @@ export default function ChartsView() {
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-2 font-medium">
-          <Calendar className="w-4 h-4 text-purple-500" />
-          <span className="text-white text-lg">
+        <div className="flex items-center gap-2 font-medium relative cursor-pointer group">
+          <Calendar className="w-4 h-4 text-purple-500 group-hover:text-purple-400 transition-colors" />
+          <span className="text-white text-lg group-hover:text-gray-200 transition-colors">
             {selectedDate.getDate()} {UA_MONTHS[selectedDate.getMonth()]} {selectedDate.getFullYear()}
           </span>
+          <input
+            type="date"
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            value={formatDateParam(selectedDate)}
+            max={formatDateParam(new Date())}
+            onChange={(e) => {
+              if (e.target.value) {
+                setSelectedDate(new Date(e.target.value));
+              }
+            }}
+          />
         </div>
         <button
           onClick={handleNext}
