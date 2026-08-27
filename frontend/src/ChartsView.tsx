@@ -165,12 +165,12 @@ export default function ChartsView() {
     let gridImportSum = 0;
     let gridExportSum = 0;
     let consSum = 0;
-    
+
     // Fallback calculation just in case daily_totals is missing
     chartData.forEach(item => {
       solarSum += item.solarPvKw / 12;
       consSum += item.consumptionKw / 12;
-      
+
       if (item.gridPowerKw > 0) {
         gridImportSum += item.gridPowerKw / 12;
       } else {
@@ -265,7 +265,7 @@ export default function ChartsView() {
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2 font-medium relative group">
-          <div 
+          <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
           >
@@ -274,12 +274,12 @@ export default function ChartsView() {
               {selectedDate.getDate()} {UA_MONTHS[selectedDate.getMonth()]} {selectedDate.getFullYear()}
             </span>
           </div>
-          
+
           {isDatePickerOpen && (
-            <DatePicker 
-              selectedDate={selectedDate} 
-              onChange={(date) => setSelectedDate(date)} 
-              onClose={() => setIsDatePickerOpen(false)} 
+            <DatePicker
+              selectedDate={selectedDate}
+              onChange={(date) => setSelectedDate(date)}
+              onClose={() => setIsDatePickerOpen(false)}
             />
           )}
         </div>
@@ -344,17 +344,12 @@ export default function ChartsView() {
                   <ArrowRightLeft className="w-5 h-5 text-sky-400" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-300">Енергія з/в мережу</h3>
+                  <h3 className="text-sm font-semibold text-gray-300">Імпорт/Експорт</h3>
                   <p className="text-xs text-gray-500">Сума за день</p>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-white tracking-tight">
-                  <span className="text-sm text-gray-400 font-normal mr-1">Імпорт</span>{totals.gridImport}
-                  <span className="text-gray-600 mx-2">/</span>
-                  <span className="text-sm text-gray-400 font-normal mr-1">Експорт</span>{totals.gridExport}
-                  <span className="text-sm font-normal text-gray-400 ml-1">кВт·год</span>
-                </div>
+                <div className="text-lg font-bold text-white tracking-tight">{totals.gridImport}/{totals.gridExport} кВт·год</div>
               </div>
             </div>
             <div className="h-48 w-full">
