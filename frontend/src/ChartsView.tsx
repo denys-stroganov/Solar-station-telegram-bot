@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart2, Calendar, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import DatePicker from './DatePicker';
 
 interface ChartDataItem {
   time: string;
@@ -25,7 +26,7 @@ const UA_MONTHS = [
 
 export default function ChartsView() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const dateInputRef = useRef<HTMLInputElement>(null);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [data, setData] = useState<ChartDataItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -206,33 +207,24 @@ export default function ChartsView() {
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <div 
-          className="flex items-center gap-2 font-medium relative cursor-pointer group"
-          onClick={() => {
-            try {
-              dateInputRef.current?.showPicker();
-            } catch (e) {
-              // fallback if showPicker is not supported
-            }
-          }}
-        >
-          <Calendar className="w-4 h-4 text-purple-500 group-hover:text-purple-400 transition-colors" />
-          <span className="text-white text-lg group-hover:text-gray-200 transition-colors">
-            {selectedDate.getDate()} {UA_MONTHS[selectedDate.getMonth()]} {selectedDate.getFullYear()}
-          </span>
-          <input
-            ref={dateInputRef}
-            type="date"
-            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-            style={{ pointerEvents: 'none' }}
-            value={formatDateParam(selectedDate)}
-            max={formatDateParam(new Date())}
-            onChange={(e) => {
-              if (e.target.value) {
-                setSelectedDate(new Date(e.target.value));
-              }
-            }}
-          />
+        <div className="flex items-center gap-2 font-medium relative group">
+          <div 
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+          >
+            <Calendar className="w-4 h-4 text-purple-500 group-hover:text-purple-400 transition-colors" />
+            <span className="text-white text-lg group-hover:text-gray-200 transition-colors">
+              {selectedDate.getDate()} {UA_MONTHS[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+            </span>
+          </div>
+          
+          {isDatePickerOpen && (
+            <DatePicker 
+              selectedDate={selectedDate} 
+              onChange={(date) => setSelectedDate(date)} 
+              onClose={() => setIsDatePickerOpen(false)} 
+            />
+          )}
         </div>
         <button
           onClick={handleNext}
