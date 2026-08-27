@@ -124,15 +124,56 @@ export default function ChartsView() {
     consumptionKw: item.consumption / 1000,
   }));
 
-  const tickValues = chartData
-    .filter(item => item.minute === 0 && item.hour % 4 === 0)
-    .map(item => item.timeFormatted);
+  const tickValues: string[] = [];
+  let lastHourAdded = -1;
+  chartData.forEach(item => {
+    if (item.hour % 4 === 0 && item.hour !== lastHourAdded) {
+      tickValues.push(item.timeFormatted);
+      lastHourAdded = item.hour;
+    }
+  });
 
-  if (tickValues.length === 0 && chartData.length > 0) {
-    // fallback if exactly :00 is not found
-    const first = chartData[0];
-    tickValues.push(first.timeFormatted);
-  }
+  const calculateTotals = () => {
+    let solarSum = 0;
+    let gridImportSum = 0;
+    let gridExportSum = 0;
+    let consSum = 0;
+    let batChargeSum = 0;
+    let batDischargeSum = 0;
+    
+    chartData.forEach(item => {
+      solarSum += item.solarPvKw / 12;
+      consSum += item.consumptionKw / 12;
+      
+      // Assuming positive gridPower is Import (taking from grid), negative is Export
+      if (item.gridPowerKw > 0) {
+        gridImportSum += item.gridPowerKw / 12;
+      } else {
+        gridExportSum += Math.abs(item.gridPowerKw) / 12;
+      }
+      
+      // Assuming positive battery is Discharge (giving power), negative is Charge
+      if (item.batteryKw > 0) {
+        batDischargeSum += item.batteryKw / 12;
+      } else {
+        batChargeSum += Math.abs(item.batteryKw) / 12;
+      }
+    });
+
+    const latestSoc = chartData.length > 0 ? chartData[chartData.length - 1].soc : 0;
+
+    return {
+      solar: solarSum.toFixed(1),
+      cons: consSum.toFixed(1),
+      gridImport: gridImportSum.toFixed(1),
+      gridExport: gridExportSum.toFixed(1),
+      batCharge: batChargeSum.toFixed(1),
+      batDischarge: batDischargeSum.toFixed(1),
+      soc: latestSoc.toFixed(1)
+    };
+  };
+
+  const totals = calculateTotals();
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -246,7 +287,12 @@ export default function ChartsView() {
 
           {/* Solar PV Chart */}
           <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <h3 className="text-yellow-400 font-semibold mb-4 text-sm">Генерація (kW)</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-yellow-400 font-semibold text-sm">Генерація (kW)</h3>
+              <div className="text-xs font-medium text-white/80 bg-white/5 px-2 py-1 rounded-md">
+                Сума: {totals.solar} кВт·год
+              </div>
+            </div>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
@@ -268,7 +314,12 @@ export default function ChartsView() {
 
           {/* Grid Chart */}
           <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <h3 className="text-sky-400 font-semibold mb-4 text-sm">Енергія з/в мережу (kW)</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sky-400 font-semibold text-sm">Енергія з/в мережу (kW)</h3>
+              <div className="text-xs font-medium text-white/80 bg-white/5 px-2 py-1 rounded-md">
+                Імпорт: {totals.gridImport} / Експорт: {totals.gridExport} кВт·год
+              </div>
+            </div>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
@@ -290,7 +341,12 @@ export default function ChartsView() {
 
           {/* Consumption Chart */}
           <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <h3 className="text-rose-400 font-semibold mb-4 text-sm">Споживання (kW)</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-rose-400 font-semibold text-sm">Споживання (kW)</h3>
+              <div className="text-xs font-medium text-white/80 bg-white/5 px-2 py-1 rounded-md">
+                Сума: {totals.cons} кВт·год
+              </div>
+            </div>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
@@ -312,7 +368,12 @@ export default function ChartsView() {
 
           {/* SOC Chart */}
           <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <h3 className="text-purple-400 font-semibold mb-4 text-sm">Рівень Заряду Акумуляторів (%)</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-purple-400 font-semibold text-sm">Рівень Заряду Акумуляторів (%)</h3>
+              <div className="text-xs font-medium text-white/80 bg-white/5 px-2 py-1 rounded-md">
+                Останній: {totals.soc}%
+              </div>
+            </div>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
@@ -334,7 +395,12 @@ export default function ChartsView() {
 
           {/* Battery Chart */}
           <div className="bg-[#121824] p-4 rounded-2xl border border-white/5">
-            <h3 className="text-emerald-400 font-semibold mb-4 text-sm">Заряд/Розряд Акумуляторів (kW)</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-emerald-400 font-semibold text-sm">Заряд/Розряд Акумуляторів (kW)</h3>
+              <div className="text-xs font-medium text-white/80 bg-white/5 px-2 py-1 rounded-md">
+                Заряд: {totals.batCharge} / Розряд: {totals.batDischarge} кВт·год
+              </div>
+            </div>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
