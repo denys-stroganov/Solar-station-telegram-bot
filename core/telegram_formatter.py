@@ -16,6 +16,7 @@ class TelegramFormatter:
     def runtime_info(self):
         generation = self.a.energy_generation_info
         consumption = self.a.energy_consumption_info
+        voltage = self.a.voltage_info
 
         text = "<b>🔌 ELECTRICITY</b>\n"
         text += f"Solar: <code>{generation['Solar generation']} Wt</code>\n"
@@ -31,6 +32,12 @@ class TelegramFormatter:
             text += f"  ├ R: <code>{abs(r)} Wt</code> ({r_dir})\n"
             text += f"  ├ S: <code>{abs(s)} Wt</code> ({s_dir})\n"
             text += f"  └ T: <code>{abs(t)} Wt</code> ({t_dir})\n"
+
+        if voltage:
+            text += "Voltage:\n"
+            text += f"  ├ R: <code>{voltage['Voltage R']} V, {voltage['Frequency R']} Hz</code>\n"
+            text += f"  ├ S: <code>{voltage['Voltage S']} V, {voltage['Frequency S']} Hz</code>\n"
+            text += f"  └ T: <code>{voltage['Voltage T']} V, {voltage['Frequency T']} Hz</code>\n"
 
         text += f"Consumption: <code>{consumption['Consumption']} Wt</code>\n"
         

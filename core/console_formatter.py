@@ -17,6 +17,7 @@ class ConsoleFormatter:
     def electricity_info(self):
         generation = self.a.energy_generation_info
         consumption = self.a.energy_consumption_info
+        voltage = self.a.voltage_info
 
         lines = ["======ELECTRICITY======"]
         lines.append(f"Solar generation: {generation['Solar generation']} Wt")
@@ -30,6 +31,11 @@ class ConsoleFormatter:
             lines.append(f"  ├ R: {abs(r)} Wt ({r_dir})")
             lines.append(f"  ├ S: {abs(s)} Wt ({s_dir})")
             lines.append(f"  └ T: {abs(t)} Wt ({t_dir})")
+        if voltage:
+            lines.append("Voltage:")
+            lines.append(f"  ├ R: {voltage['Voltage R']} V, {voltage['Frequency R']} Hz")
+            lines.append(f"  ├ S: {voltage['Voltage S']} V, {voltage['Frequency S']} Hz")
+            lines.append(f"  └ T: {voltage['Voltage T']} V, {voltage['Frequency T']} Hz")
         lines.append(f"Consumption: {consumption['Consumption']} Wt")
         c_r, c_s, c_t = consumption["Consumption R"], consumption["Consumption S"], consumption["Consumption T"]
         lines.append(f"  ├ R: {abs(c_r)} Wt")

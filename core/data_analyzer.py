@@ -56,6 +56,19 @@ class DataAnalyzer:
         return energy_consumption_data
 
     @property
+    def voltage_info(self):
+        voltage_data = {}
+        runtime = self.data.get("runtime", {})
+        if not runtime.get("isOffGrid", True):
+            voltage_data["Voltage R"] = round((runtime.get("vacr") or 0) / 10, 1)
+            voltage_data["Voltage S"] = round((runtime.get("vacs") or 0) / 10, 1)
+            voltage_data["Voltage T"] = round((runtime.get("vact") or 0) / 10, 1)
+            voltage_data["Frequency R"] = round((runtime.get("facr") or 0) / 100, 1)
+            voltage_data["Frequency S"] = round((runtime.get("facs") or 0) / 100, 1)
+            voltage_data["Frequency T"] = round((runtime.get("fact") or 0) / 100, 1)
+        return voltage_data
+
+    @property
     def today_info(self):
         today_data = {}
         today_data["Yield"] = self.data["energy"]["todayYielding"]/10
