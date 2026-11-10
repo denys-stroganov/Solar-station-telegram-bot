@@ -63,9 +63,9 @@ class DataAnalyzer:
             voltage_data["Voltage R"] = round((runtime.get("vacr") or 0) / 10, 1)
             voltage_data["Voltage S"] = round((runtime.get("vacs") or 0) / 10, 1)
             voltage_data["Voltage T"] = round((runtime.get("vact") or 0) / 10, 1)
-            voltage_data["Frequency R"] = round((runtime.get("facr") or 0) / 100, 1)
-            voltage_data["Frequency S"] = round((runtime.get("facs") or 0) / 100, 1)
-            voltage_data["Frequency T"] = round((runtime.get("fact") or 0) / 100, 1)
+            voltage_data["Frequency R"] = round((runtime.get("facr") or 0) / 100, 2)
+            voltage_data["Frequency S"] = round((runtime.get("facs") or 0) / 100, 2)
+            voltage_data["Frequency T"] = round((runtime.get("fact") or 0) / 100, 2)
         return voltage_data
 
     @property
