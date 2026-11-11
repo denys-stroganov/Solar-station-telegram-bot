@@ -3,12 +3,41 @@ class DataAnalyzer:
     def __init__(self, data: dict):
         self.data = data
 
+    def _get_current_soc(self) -> int | None:
+        # 1. Пріоритет: getParallelGroupDetails (актуальний стан кожного інвертора)
+        devices = (self.data.get("details") or {}).get("devices", [])
+        # Фільтруємо лише інвертори з живим Wi-Fi (lost == False)
+        online_devices = [d for d in devices if not d.get("lost", False) and d.get("soc") is not None]
+
+        if online_devices:
+            # 1.1. Найкраще: якщо онлайн Primary (майстер з прямим підключенням до BMS)
+            primary = next((d for d in online_devices if "primary" in str(d.get("roleText", "")).lower()), None)
+            if primary:
+                return primary["soc"]
+            # 1.2. Якщо Primary відпав, беремо значення з будь-якого іншого активного інвертора
+            return online_devices[0]["soc"]
+
+        # 2. Фолбек: getInverterRuntimeParallel
+        runtime = self.data.get("runtime") or {}
+        runtime_devices = [d for d in runtime.get("deviceArray", []) if not d.get("lost", False) and d.get("soc") is not None]
+        if runtime_devices:
+            return runtime_devices[0]["soc"]
+        if not runtime.get("lost", False) and runtime.get("soc") is not None:
+            return runtime["soc"]
+
+        # 3. Крайній фолбек: batteryInfo (якщо немає зв'язку з інверторами)
+        return (self.data.get("batteryInfo") or {}).get("soc")
+
     @property
     def general_info(self):
         general_data = {}
-        general_data["Last update"] = self.data["batteryInfo"]["time"]
-        general_data["State of Charge"] = self.data["batteryInfo"]["soc"]
-        general_data["Battery temperature, °C"] = self.data["batteryInfo"]["tBat"]
+        general_data["Last update"] = (
+            (self.data.get("runtime") or {}).get("deviceTime")
+            or (self.data.get("batteryInfo") or {}).get("time")
+            or "—"
+        )
+        general_data["State of Charge"] = self._get_current_soc()
+        general_data["Battery temperature, °C"] = (self.data.get("batteryInfo") or {}).get("tBat", "—")
         return general_data
 
     @property
