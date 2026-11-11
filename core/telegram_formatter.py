@@ -9,7 +9,7 @@ class TelegramFormatter:
             "<b>⚡ GENERAL INFO</b>\n"
             f"Electricity: {electricity}\n"
             f"Last update: <code>{info['Last update']}</code>\n"
-            f"SOC: <code>{info['State of Charge']}</code>\n"
+            f"SOC: <code>{info['State of Charge']}%</code>\n"
             f"Battery temp: <code>{info['Battery temperature, °C']}°C</code>"
         )
 
